@@ -1,10 +1,11 @@
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
+import jwt_decode from 'jwt-decode';
 /* eslint-disable camelcase */
 import React from 'react';
-import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
-import jwt_decode from 'jwt-decode';
-import shareVideo from '../assets/foodss.mp4';
+
 import logo from '../assets/logoss.png';
+import shareVideo from '../assets/videos.mp4';
 import { client } from '../client';
 
 const Login = () => {
