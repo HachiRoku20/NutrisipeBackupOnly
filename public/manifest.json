@@ -1,0 +1,132 @@
+{
+  "name": "Nutrisipe",
+  "short_name": "Nutrisipe",
+  "description": "A Recipe Cookbook Progressive Web Application with Social Media Features",
+  "orientation": "any",
+  "theme_color": "#FF9F1C",
+  "background_color": "#42C9BD",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "screenshots": [
+    {
+      "src": "1.png",
+      "sizes": "1366x670",
+      "type": "image/png"
+    },
+    {
+      "src": "2.png",
+      "sizes": "427x615",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create Recipe",
+      "url": "/create-pin",
+      "description": "Upload your recipe!",
+      "icons": [
+        {
+          "src": "sc96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "icons": [
+    {
+      "src": "android-48x48.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "android-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "android-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "android-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "android-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "android-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "android-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "android-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "android-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "maskable_icon_x48.png",
+      "type": "image/png",
+      "sizes": "48x48",
+      "purpose": "maskable"
+    },
+    {
+      "src": "maskable_icon_x72.png",
+      "type": "image/png",
+      "sizes": "72x72",
+      "purpose": "maskable"
+    },
+    {
+      "src": "maskable_icon_x96.png",
+      "type": "image/png",
+      "sizes": "96x96",
+      "purpose": "maskable"
+    },
+    {
+      "src": "maskable_icon_x128.png",
+      "type": "image/png",
+      "sizes": "128x128",
+      "purpose": "maskable"
+    },
+    {
+      "src": "maskable_icon_x144.png",
+      "type": "image/png",
+      "sizes": "144x144",
+      "purpose": "maskable"
+    },
+    {
+      "src": "maskable_icon_x192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "maskable_icon_x384.png",
+      "type": "image/png",
+      "sizes": "384x384",
+      "purpose": "maskable"
+    },
+    {
+      "src": "maskable_icon_x512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ]
+}
