@@ -38,6 +38,7 @@ module.exports = {
         350: '350px',
         620: '620px',
       },
+      
       textColor: {
         lightGray: '#F1EFEE',
         primary: '#FAFAFA',
@@ -54,8 +55,10 @@ module.exports = {
         nGreen:'#008083',
         nRed:'#dc2626',
         nOrange: '#FF9F1C',
-        nTeal:'#0d9488'
+        nTeal:'#0d9488',
+        nGreen2: '#059396'
       },
+      
       keyframes: {
         'slide-in': {
           '0%': {
@@ -91,10 +94,13 @@ module.exports = {
       'zoom-in': 'zoom-in',
       pointer: 'pointer',
     },
+   
   },
   variants: {
     // backgroundColor: ['active'],
     extend: {},
   },
   plugins: [],
+
+ 
 };

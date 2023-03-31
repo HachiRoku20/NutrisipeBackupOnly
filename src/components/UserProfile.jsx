@@ -5,7 +5,7 @@ import { AiOutlineLogout } from 'react-icons/ai';
 import { useParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { googleLogout } from '@react-oauth/google';
-import { userCreatedPinsQuery, userQuery, userSavedPinsQuery /* userfollowers, userfollowing*/ } from '../utils/data';
+import { userCreatedPinsQuery, userQuery, userSavedPinsQuery, userfollowers, userfollowing, userFollowingPost, userHiddenCreatedPinsQuery} from '../utils/data';
 import { client } from '../client';
 import MasonryLayout from './MasonryLayout';
 import Spinner from './Spinner';
@@ -26,62 +26,90 @@ const UserProfile = () => {
   const { userId } = useParams();
   const users = fetchUser();
 
-  // const create = (id) => {
-  //   client
-  //     .patch(id)
-  //     .setIfMissing({ follow: [] })
-  //     .insert('after', 'follow[-1]', [{
-  //       _key: users.sub,
-  //       userId: users.sub,
-  //       postedBy: {
-  //         _type: 'postedBy',
-  //         _ref: users.sub,
-  //       }
-  //     }])
-  //     .commit()
-  //     .then(() => {
-  //       setAlreadyFollowed(true);
-  //       fetchFollower();
-  //       fetchfollowing();
-  //     });
-  // };
+  const create = (followedUserId) => {
+    client
+      .patch(users.sub)
+      .setIfMissing({ following: [] })
+      .insert('after', 'following[-1]', [{
+        _key: followedUserId,
+        userId: followedUserId,
+        postedBy: {
+          _type: 'postedBy',
+          _ref: followedUserId,
+        }
+      }])
+      .commit()
+      .then(() => {
+        setAlreadyFollowed(true);
+        fetchFollower();
+        fetchFollowing();
+        console.log('Current user saved to following');
+      });
+    // Save followed user to the 'followers' field of the user being followed
+    client
+      .patch(followedUserId)
+      .setIfMissing({ followers: [] })
+      .insert('after', 'followers[-1]', [{
+        _key: users.sub,
+        userId: users.sub,
+        postedBy: {
+          _type: 'postedBy',
+          _ref: users.sub,
+        }
+      }])
+      .commit()
+      .then(() => {
+        console.log('Followed user saved to followers');
+      });
+  };
+  const fetchFollowing = () => {
+    const followers = userfollowers(userId);
+    client.fetch(followers).then((data) => {
+      setLengths(data[0]?.followers);
+      if ((data[0]?.followers?.filter((item) => item?.postedBy?._id === users?.sub))?.length > 0) {
+        setAlreadyFollowed(true);
+      }
+    });
+  };
 
-  // const fetchfollowing = () => {
-  //   const followers = userfollowers(userId);
-  //   client.fetch(followers).then((data) => {
-  //     setLengths(data[0]?.follow);
-  //     if ((data[0]?.follow?.filter((item) => item?.postedBy?._id === users?.sub))?.length > 0) {
-  //       setAlreadyFollowed(true);
-  //     }
-  //   });
-  // };
+  const fetchFollower = () => {
+    client.fetch(userfollowing).then((data) => {
+      const index = (data?.map((index) => (
+        index?.followers?.map((index) => index?.postedBy?._id === userId)
+      )));
 
-  // const fetchFollower = () => {
-  //   client.fetch(userfollowing).then((data) => {
-  //     const index = (data?.map((index) => (
-  //       index?.follow?.map((index) => index?.postedBy?._id === userId)
-  //     )));
+      const index2 = (index?.map((value) => (
+        value?.filter((Boolean))
+      )));
 
-  //     const index2 = (index?.map((value) => (
-  //       value?.filter((Boolean))
-  //     )));
+      const index3 = (index2?.filter(Boolean).map((index) => index?.length).filter(Number));
 
-  //     const index3 = (index2?.filter(Boolean).map((index) => index?.length).filter(Number));
+      setFollowing(index3);
+    });
+  };
 
-  //     setFollowing(index3);
-  //   });
-  // };
+  const unfollow = (id) => {
+    // Remove current user from the 'following' field of the user being unfollowed
+    client
+        .patch(id)
+        .unset([`followers[userId=="${users.sub}"]`])
+        .commit()
+        .then(() => {
+            console.log('Current user removed from following');
+        });
 
-  // const unfollow = (id) => {
-  //   const ToRemove = [`follow[userId=="${users.sub}"]`];
-  //   client
-  //     .patch(id)
-  //     .unset(ToRemove)
-  //     .commit()
-  //     .then(() => {
-  //       window.location.reload();
-  //     });
-  // };
+    // Remove unfollowed user from the 'followers' field of your user document
+    client
+        .patch(users.sub)
+        .unset([`following[userId=="${id}"]`])
+        .commit()
+        .then(() => {
+            setAlreadyFollowed(false);
+            fetchFollower();
+            fetchFollowing();
+            console.log('Unfollowed user removed from followers');
+        });
+};
 
   useEffect(() => {
     const query = userQuery(userId);
@@ -93,14 +121,23 @@ const UserProfile = () => {
   useEffect(() => {
     if (text === 'Created') {
       const createdPinsQuery = userCreatedPinsQuery(userId);
-      client.fetch(createdPinsQuery)
+      const hiddenCreatedPinsQuery = userHiddenCreatedPinsQuery(userId);
+
+      if (userId === users.sub) {
+        client.fetch(createdPinsQuery)
       .then((data) => {
        setPins(data);
       });
+      }
+      else {
+        client.fetch(hiddenCreatedPinsQuery)
+        .then((data) => {
+         setPins(data);
+        });
+      }
     } 
     else {
       const savedPinsQuery = userSavedPinsQuery(userId);
-
       client.fetch(savedPinsQuery)
       .then((data) => {
        setPins(data);
@@ -108,21 +145,18 @@ const UserProfile = () => {
     }
   }, [text, userId]);
 
-  // useEffect(() => {
-  //   fetchfollowing();
-  // }, [userId]);
-
-  // useEffect(() => {
-  //   fetchFollower();
-  // }, [userId]);
+  useEffect(() => {
+    fetchFollowing();
+    fetchFollower();
+  }, [userId]);
 
   if (!user) {
-    return <Spinner message="Loading Profile...." />;
+    return <Spinner message="Loading Profile..." />;
   }
 
-  // const alerts = () => {
-  //   navigate(`/user-profile/${userId}/following`);
-  // };
+  const alerts = () => {
+    navigate(`/user-profile/${userId}/following`);
+  };
 
   const image = 'https://source.unsplash.com/1600x900/?philippines-food';
 
@@ -155,13 +189,13 @@ const UserProfile = () => {
                  navigate('/login');
                }}
              >
-               <AiOutlineLogout color="red" fontSize={21} />
+               <AiOutlineLogout color="red" className="  opacity-70 hover:opacity-100" fontSize={21} />
              </button>
               )}
             </div>
           </div>
 
-{/*          <div className="text-center mb-7">
+      <div className="text-center mb-7">
             
             <button
               type="button"
@@ -215,19 +249,20 @@ const UserProfile = () => {
               )}
             </>
           )}
-                */}
+              
           <div className="text-center mb-7">
             <button
               type="button"
               onClick={(e) => {
                 setText(e.target.textContent);
                 setActiveBtn('created');
+                console.log(userId)
               }}
               className={`${activeBtn === 'created' ? activeBtnStyles : notActiveBtnStyles}`}
-              
             >
               Created
             </button>
+            
             <button
               type="button"
               onClick={(e) => {

@@ -3,7 +3,7 @@
   "short_name": "Nutrisipe",
   "description": "A Recipe Cookbook Progressive Web Application with Social Media Features",
   "orientation": "any",
-  "theme_color": "#FF9F1C",
+  "theme_color": "#42C9BD",
   "background_color": "#42C9BD",
   "display": "standalone",
   "scope": "/",

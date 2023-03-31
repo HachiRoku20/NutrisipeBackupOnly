@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom';
-
 import { client } from '../client';
 import { userfollowing } from '../utils/data';
 import { fetchUser } from '../utils/fetchUser';
@@ -18,13 +17,13 @@ const Following = () => {
         client
         .fetch(userfollowing)
         .then((data) => {
-            const index1 = (data?.map((index) => (index?.follow?.map((index) => index?.postedBy?._id === userId))));
+            const index1 = (data?.map((index) => (index?.followers?.map((index) => index?.postedBy?._id === userId))));
             const index2 = (index1?.map((value) => (value?.filter((Boolean)))));
             const index3 = (index2?.filter(Boolean).map((index) => index?.length).filter(Number));
             const index4 =  (a1, a2) => a1.map((index, i) => [index, a2[i]]);
             const index5 =  (a1, a2) => a1.map((index,i) => [index, a2[i]]);
-            const index6 = (index4(data?.map((index) => index?.follow?.map((index) => index?.postedBy?._id === userId).reduce((acc,cv)=>(cv)?acc+1:acc,0) && index?.image).filter((Boolean)),data?.map((index) => index?.follow?.map((index) => index?.postedBy?._id === userId).reduce((acc,cv)=>(cv)?acc+1:acc,0) && index?._id).filter((Boolean))));
-            const index7 = data?.map((index) => index?.follow?.map((index) => index?.postedBy?._id === userId).reduce((acc,cv)=>(cv)?acc+1:acc,0) && index?.userName).filter((Boolean));
+            const index6 = (index4(data?.map((index) => index?.followers?.map((index) => index?.postedBy?._id === userId).reduce((acc,cv)=>(cv)?acc+1:acc,0) && index?.image).filter((Boolean)),data?.map((index) => index?.followers?.map((index) => index?.postedBy?._id === userId).reduce((acc,cv)=>(cv)?acc+1:acc,0) && index?._id).filter((Boolean))));
+            const index7 = data?.map((index) => index?.followers?.map((index) => index?.postedBy?._id === userId).reduce((acc,cv)=>(cv)?acc+1:acc,0) && index?.userName).filter((Boolean));
             setLength(index3?.length);
             setFollowing(index5(index6,index7));
             setLoading(false);       
@@ -36,20 +35,27 @@ const Following = () => {
     },[userId]);
 
     const Unfollow = (id) => {
-        const ToRemove = [`follow[userId=="${userId}"]`]
         client
-          .patch(id)
-          .unset(ToRemove)
-          .commit()
-          .then(() => {
-            window.location.reload();
-          });
-    }
-
+            .patch(id)
+            .unset([`followers[userId=="${user.sub}"]`])
+            .commit()
+            .then(() => {
+                console.log('Current user removed from following');
+            });
+        client
+            .patch(user.sub)
+            .unset([`following[userId=="${id}"]`])
+            .commit()
+            .then(() => {
+                console.log('Unfollowed user removed from followers');
+                Following();
+            });
+    };
+    
     if(loading) return <Spinner message="Loading..." />
   
     if(!length) return <p className='mt-96 flex flex-col justify-center items-center text-nGreen text-2xl  transition-all duration-150 ease-in'>
-        No Current Following
+        No Current Following.
     </p>
   
     return (
@@ -73,7 +79,7 @@ const Following = () => {
                            <button 
                              onClick={(e) => {
                                  e.stopPropagation();
-                                 Unfollow(`${index?.[0]?.[1]}`);
+                                 Unfollow(index?.[0]?.[1])
                              }}
                              className='font-bold text-red-500 ml-28 md:m-0'
                            >

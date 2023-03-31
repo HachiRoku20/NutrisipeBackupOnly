@@ -13,11 +13,16 @@ ReactDOM.render(
   document.getElementById('root'),
 );
 
-// eto na si jok
-//ETO NA SI JERIS GALING AKO SA MAIN
-
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://cra.link/PWA
+// unregister() to register()
 serviceWorkerRegistration.register();
 
+/*
+Nutrisipe: A Recipe Cookbook Progressive Web Application with Social Media Features
+
+Gonzales, Dave Christian B.
+Manalad, Niño L.
+Puno, Jeris Lauren G.
+Sarmiento, Joshua D.
+*/
+
+// Lord, Kayo na po bahala samin, we did our best naman po, whatever the result will be, please let and help our group accept what you have planned for us, but we pray that the result will be considered as PASSED po, so that we can graduate in time. God bless our group, and give us the ability and confidence to defend our Thesis succesfully. This is it, kaya natin to guys! Amen.

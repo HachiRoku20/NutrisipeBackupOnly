@@ -1,15 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line no-unused-vars
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { AiTwotoneDelete } from 'react-icons/ai';
+import { AiTwotoneDelete, AiOutlineHeart, AiFillHeart, } from 'react-icons/ai';
 import { client, urlFor } from '../client';
+import { io } from "socket.io-client"
 
 const Pin = ({ pin }) => {
-  const [postHovered, setPostHovered] = useState(false);
-  const [savingPost, setSavingPost] = useState(false);
   const navigate = useNavigate();
+  const [postHovered, setPostHovered] = useState(false);
+  const [savingPost, setSavingPost] = useState();
   const { postedBy, image, _id } = pin;
+  const [buttonState, setButtonState] = useState();
+
+
+  const user = localStorage.getItem('user') !== 'undefined' ? JSON.parse(localStorage.getItem('user')) : localStorage.clear();
+
+  let alreadySaved = pin?.save?.filter((item) => item?.postedBy?._id === user?.sub);
+
+  alreadySaved = alreadySaved?.length > 0 ? alreadySaved : [];
+
+  useEffect(() => {
+
+    alreadySaved?.length !== 0 ? setSavingPost(true) : setSavingPost(false);
+
+
+  }, []);
+
+
+
+
+
+  const savePin = (id) => {
+    // if (alreadySaved?.length === 0) {
+    client
+      .patch(id)
+      .setIfMissing({ save: [] })
+      .insert('after', 'save[-1]', [{
+        _key: uuidv4(),
+        userId: user?.sub,
+        postedBy: {
+          _type: 'postedBy',
+          _ref: user?.sub,
+        },
+      }])
+      .commit()
+      .then(() => {
+        setSavingPost(true);
+        console.log("SAVING POST IS TRUE")
+        console.log(alreadySaved?.length)
+      })
+    // }
+  };
+
 
   // delete a post
   const deletePin = (id) => {
@@ -18,37 +61,8 @@ const Pin = ({ pin }) => {
       .then(() => {
         window.location.reload(false);
       });
-      
+
   };
-  const user = localStorage.getItem('user') !== 'undefined' ? JSON.parse(localStorage.getItem('user')) : localStorage.clear();
-
-  let alreadySaved = pin?.save?.filter((item) => item?.postedBy?._id === user?.sub);
-
-  alreadySaved = alreadySaved?.length > 0 ? alreadySaved : [];
-
-  const savePin = (id) => {
-    if (alreadySaved?.length === 0) {
-      setSavingPost(true);
-
-      client
-        .patch(id)
-        .setIfMissing({ save: [] })
-        .insert('after', 'save[-1]', [{
-          _key: uuidv4(),
-          userId: user?.sub,
-          postedBy: {
-            _type: 'postedBy',
-            _ref: user?.sub,
-          },
-        }])
-        .commit()
-        .then(() => {
-          window.location.reload(false);
-          setSavingPost(false);
-        });
-    }
-  };
-
   // unsave a post
   const Unsave = (id) => {
     const ToRemove = [`save[userId=="${user?.sub}"]`];
@@ -57,7 +71,9 @@ const Pin = ({ pin }) => {
       .unset(ToRemove)
       .commit()
       .then(() => {
-        window.location.reload(false);
+        setSavingPost(false);
+        console.log("SAVING POST IS FALSE")
+        console.log(alreadySaved?.length)
       });
   };
 
@@ -71,7 +87,7 @@ const Pin = ({ pin }) => {
       >
 
         {image && (
-        <img className="rounded-lg w-full " src={(urlFor(image).width(250).url())} alt="user-post" />)}
+          <img className="rounded-lg w-full " src={(urlFor(image).width(250).url())} alt="user-post" />)}
         {postHovered && (
           <div
             className="absolute top-0 w-full h-full flex flex-col justify-between p-1 pr-2 pt-2 pb-2 z-50"
@@ -79,7 +95,7 @@ const Pin = ({ pin }) => {
           >
             <div className="flex items-center justify-between">
 
-              {alreadySaved?.length !== 0 ? (
+              {savingPost ? (
                 <button
                   type="button"
                   onClick={(e) => {
@@ -88,7 +104,7 @@ const Pin = ({ pin }) => {
                   }}
                   className="bg-nOrange opacity-70 hover:opacity-100 text-white font-bold px-5 py-1 text-base rounded-3xl hover:shadow-md outline-none"
                 >
-                  Unsave
+                  <AiFillHeart />
                 </button>
               ) : (
                 <button
@@ -99,7 +115,7 @@ const Pin = ({ pin }) => {
                   type="button"
                   className="bg-nOrange opacity-70 hover:opacity-100 text-white font-bold px-5 py-1 text-base rounded-3xl hover:shadow-md outline-none"
                 >
-                  {savingPost ? 'Saving' : 'Save'}
+                  <AiOutlineHeart />
                 </button>
               )}
 

@@ -12,29 +12,29 @@ import veg from '../assets/categories/veg.jpg';
 export const metrics = [
   {
     name: 'Tbsp',
-    
+
   },
   {
     name: 'Kg',
-   
+
   },
   {
     name: 'Grams',
-    
+
   },
   {
     name: 'Protein',
-    
+
   },
   {
     name: 'Fruits',
-  
+
   },
   {
     name: 'Fish and Seafoods',
-    
+
   },
-  
+
 ];
 
 export const categories = [
@@ -108,7 +108,7 @@ const fakeDataIng = [
 ]
 
 
-export const feedQuery = `*[_type == "pin"] | order(_createdAt desc) {
+export const feedQuery = `*[_type == "pin" && !isHidden] | order(_createdAt desc) {
   image{
     asset->{
       url
@@ -132,10 +132,46 @@ export const feedQuery = `*[_type == "pin"] | order(_createdAt desc) {
           image
         },
       },
+      isHidden,
     } `;
 
+export const userFollowingPost = (userId) => {
+  const query = `*[_type == "pin" && userId in *[_type == "user" && id == '${userId}'].following[].userId && isHidden == false]| order(_createdAt desc) {
+        image{
+          asset->{
+            url
+          }
+        },
+            _id,
+            procedure[],
+            ingredient[],
+            ingredientVal[],
+            metric[],
+            postedBy->{
+              _id,
+              userName,
+              image
+            },
+            save[]{
+              _key,
+              postedBy->{
+                _id,
+                userName,
+                image
+              },
+            },
+            isHidden,
+          }`;
+  return query;
+};
 
-    export const allUser = `*[_type == 'user']
+export const adminUsers = (userId) => {
+  const query = `*[_type == "user" && isAdmin == true && id =='${userId}'] {
+        _id
+      }`;
+  return query;
+}
+export const allUser = `*[_type == 'user']
     {
       _id,
       image,
@@ -176,7 +212,8 @@ export const pinDetailQuery = (pinId) => {
         userName,
         image
       },
-    }
+    },
+    isHidden,
   }`;
   return query;
 };
@@ -205,12 +242,13 @@ export const pinDetailMorePinQuery = (pin) => {
         image
       },
     },
+    isHidden,
   }`;
   return query;
 };
 
 export const searchQuery = (searchTerm) => {
-  const query = `*[_type == "pin" && title match '${searchTerm}*' || category match '${searchTerm}*' || about match '${searchTerm}*' || ingredient match '${searchTerm}*' || postedBy->userName match '${searchTerm}*' ]{
+  const query = `*[_type == "pin" && (title match '${searchTerm}*' || category match '${searchTerm}*' || about match '${searchTerm}*' || ingredient match '${searchTerm}*' || postedBy->userName match '${searchTerm}*') && isHidden != true]{
     image{
       asset->{
         url
@@ -233,9 +271,11 @@ export const searchQuery = (searchTerm) => {
         image
       },
     },
+    isHidden,
   }`;
   return query;
 };
+
 
 export const userQuery = (userId) => {
   const query = `*[_type == "user" && _id == '${userId}']`;
@@ -250,7 +290,7 @@ export const userSearch = (searchTerm) => {
   }`;
   return query;
 };
- 
+
 
 
 export const userCreatedPinsQuery = (userId) => {
@@ -277,6 +317,35 @@ export const userCreatedPinsQuery = (userId) => {
         image
       },
     },
+    isHidden,
+  }`;
+  return query;
+};
+export const userHiddenCreatedPinsQuery = (userId) => {
+  const query = `*[ _type == 'pin' && userId == '${userId}' && !isHidden] | order(_createdAt desc){
+    image{
+      asset->{
+        url
+      }
+    },
+    _id,
+    procedure[],
+    ingredientListPost,
+    nutritionPost,
+    postedBy->{
+      _id,
+      userName,
+      image
+    },
+    save[]{
+      _key,
+      postedBy->{
+        _id,
+        userName,
+        image
+      },
+    },
+    isHidden,
   }`;
   return query;
 };
@@ -305,65 +374,24 @@ export const userSavedPinsQuery = (userId) => {
         image
       },
     },
+    isHidden,
   }`;
   return query;
 };
 
-// export const userFollowingPost = (userId) => {
-//   const query = `*[ _type == "user" && id == '${userId}'] | order(_createdAt desc)
-//   {
-//   'pin': *[_type == 'pin' && references(^._id)]
-//    {
-//     image{
-//       asset->{
-//         url
-//       }
-//     },
-//     _id,
-//     title, 
-//     about,
-//     ingredientListPost,
-//     nutritionPost,
-//     procedure[],
-//     category,
-//     postedBy->{
-//       _id,
-//       userName,
-//       image
-//     },
-//    save[]{
-//       postedBy->{
-//         _id,
-//         userName,
-//         image
-//       },
-//     },
-//     comments[]{
-//       comment,
-//       _key,
-//       postedBy->{
-//         _id,
-//         userName,
-//         image
-//       },
-//     }
-//   }
-//    } `;
-//   return query;
-// };
 
-// export const userfollowers = (userId) => {
-//   const query = `*[_type == 'user' && _id == '${userId}'] | order(_createdAt desc) {
-//     follow[]{
-//       postedBy->{
-//         _id,
-//         userName,
-//         image
-//       },
-//     },
-//   }`;
-//   return query;
-// };
+export const userfollowers = (userId) => {
+  const query = `*[_type == 'user' && _id == '${userId}'] | order(_createdAt desc) {
+    followers[]{
+      postedBy->{
+        _id,
+        userName,
+        image
+      },
+    },
+  }`;
+  return query;
+};
 
 export const ingredientBaseValue = (pinDetail) => {
   const query = `*[ingAdminName == '${pinDetail.ingredient}'].baseSize[baseSizeNum == '${pinDetail.metric}']
@@ -385,8 +413,8 @@ export const ingredientBaseValue = (pinDetail) => {
   }`;
   return query;
 };
-  export const fetchIngredientValue = (pinDetail) => {
-    const query = `*[ingAdminName == '${pinDetail?.ingredient}'].baseSize[]
+export const fetchIngredientValue = (pinDetail) => {
+  const query = `*[ingAdminName == '${pinDetail?.ingredient}'].baseSize[]
     {
       calcium,
       calories,
@@ -403,75 +431,67 @@ export const ingredientBaseValue = (pinDetail) => {
       vitaminA,
       vitaminC,
     }`;
-    return query;
+  return query;
 };
 
 
-// export const userfollowing = `*[_type == "user"] | order(_createdAt desc) {
-//   image,
-//   _id,
-//   _type,
-//   userName,
-//   follow[]{
-//         _key,
-//         postedBy->{
-//           _id,
-//           userName,
-//           image
-//         },
-//       },
-// } `;
+export const userfollowing = `*[_type == "user"] | order(_createdAt desc) {
+  image,
+  _id,
+  _type,
+  userName,
+  followers[]{
+        _key,
+        postedBy->{
+          _id,
+          userName,
+          image
+        },
+      },
+} `;
 
 export const ingval = `*[IngredientAdmin == "ChokoNyoks"]`;
 
 export const image = '*[_type == "user"]';
 
-export const allIngredientsQuery = `*[_type == 'ingredientAdmin']{
-  ingAdminName,
-  baseSize[]{
-    baseSizeNum,
-  calcium,
-  calories,
-  cholesterol,
-  dietaryFiber,
-  iron,
-  protein,
-  saturatedfat,
-  sodium,
-  sugar,
-  totalfat,
-  transfat,
-  vitaminA,
-  vitaminC,
-  totalcarb,
-  _key
-  },
-  _key
-}`;
+export const allIngredientsQuery = `*[_type == 'ingredientData']{
+  foodItem,
+    altName,
+    ediblePortion,
+    energy,
+    prot,
+    fat,
+    carb,
+    calcium,
+    phos,
+    iron,
+    vitA,
+    thia,
+    ribo,
+    nia,
+    vitC,
+    _key
+  }`;
 
 
 
 export const searchIngredientQuery = (searchIngredientTerm) => {
-  const query = `*[_type == 'ingredientAdmin'  && ingAdminName match '${searchIngredientTerm}*' ]{
-    ingAdminName,
-    baseSize[]{
-      baseSizeNum,
+  const query = `*[_type == 'ingredientData'  && foodItem match '${searchIngredientTerm}*' || altName match '${searchIngredientTerm}*' ]{
+    foodItem,
+    altName,
+    ediblePortion,
+    energy,
+    prot,
+    fat,
+    carb,
     calcium,
-    calories,
-    cholesterol,
-    dietaryFiber,
+    phos,
     iron,
-    protein,
-    saturatedfat,
-    sodium,
-    sugar,
-    totalfat,
-    transfat,
-    vitaminA,
-    vitaminC,
-    totalcarb,
-    _key
-    },
+    vitA,
+    thia,
+    ribo,
+    nia,
+    vitC,
     _key
   }`;
   return query;
@@ -479,26 +499,22 @@ export const searchIngredientQuery = (searchIngredientTerm) => {
 
 
 export const searchChosenIngredientQuery = (chosenIngredient) => {
-  const query = `*[_type == 'ingredientAdmin'  && ingAdminName match '${chosenIngredient}*' ]{
-    ingAdminName,
-    baseSize[]{
-      baseSizeNum,
+  const query = `*[_type == 'ingredientData'  && foodItem match '${chosenIngredient}*' || altName match '${chosenIngredient}*' ]{
+    foodItem,
+    altName,
+    ediblePortion,
+    energy,
+    prot,
+    fat,
+    carb,
     calcium,
-    calories,
-    cholesterol,
-    dietaryFiber,
+    phos,
     iron,
-    protein,
-    saturatedfat,
-    sodium,
-    sugar,
-    totalfat,
-    transfat,
-    vitaminA,
-    vitaminC,
-    totalcarb,
-    _key
-    },
+    vitA,
+    thia,
+    ribo,
+    nia,
+    vitC,
     _key
   }`;
   return query;

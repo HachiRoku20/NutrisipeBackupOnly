@@ -13,30 +13,43 @@ const Followers = () => {
   const { userId } = useParams();
   const user = fetchUser();
 
-  const Followers = () => {
+  const fetchfollowers = () => {
     setLoading(true);
     const followers = userfollowers(userId);
     client.fetch(followers).then((data) => {
       setFollowers(data[0]);
-      setLength(data[0]?.follow?.filter((index) => index.postedBy)?.length);
+      setLength(data[0]?.followers?.filter((index) => index.postedBy)?.length);
       setLoading(false);
     });
   }
 
   useEffect(() => {
-    Followers();
+    fetchfollowers();
   }, [userId]);
-
-  const Unfollow = (id) => {
-    const ToRemove = [`follow[userId=="${id}"]`]
+  
+  const unfollow = (id) => {
     client
-      .patch(userId)
-      .unset(ToRemove)
+      .patch(id)
+      .unset([`following[userId=="${user.sub}"]`])
       .commit()
-      .then(() => {
-        window.location.reload();
+      .catch((error) => {
+        console.error(`Error while removing current user from followers: ${error.message}`);
       })
-  }
+      .then(() => {
+        client
+          .patch(user.sub)
+          .unset([`followers[userId=="${id}"]`])
+          .commit()
+          .catch((error) => {
+            console.error(`Error while removing unfollowed user from following: ${error.message}`);
+          })
+          .then(() => {
+            console.log('Unfollowed user removed from followers and following');
+            fetchfollowers();
+          });
+      });
+  };
+
 
   if(loading) return <Spinner message="Loading followers..." />
 
@@ -47,7 +60,7 @@ const Followers = () => {
   return (
     <>
       <div className='md:flex md:flex-row '>
-        {followers?.follow?.map((index, i) => (
+        {followers?.followers?.map((index, i) => (
             <div className="flex gap-2 ml-2 lg:w-1/6 md:w-full mt-5 items-center bg-white rounded-lg" key={i}>
               <Link to={`/user-profile/${index.postedBy?._id}`}>
               <img
@@ -61,17 +74,7 @@ const Followers = () => {
                   <p className='font-bold'>{index.postedBy?.userName}</p>
                 </div>
               </Link>
-              {userId === user?.sub && (
-                <button 
-                  onClick={(e) => {
-                      e.stopPropagation();
-                      Unfollow(`${index.postedBy?._id}`);
-                  }}
-                  className='font-bold text-red-500 ml-28 md:ml-0 md:text-sm'
-                >
-                  Remove 
-                </button>
-              )}
+             
             </div>
         ))}
       </div>
